@@ -20,7 +20,8 @@
         padding: 20px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       }
-      .btn-primary {
+      .btn-primary,
+      .btn-secondary {
         margin-top: 20px;
       }
       #downloadLink {
@@ -60,6 +61,12 @@
               class="form-control-file mb-3"
               onchange="updateFileList()"
             />
+            <button
+              onclick="document.getElementById('pdfInput').click()"
+              class="btn btn-secondary"
+            >
+              ファイルを追加
+            </button>
             <div id="fileList" class="text-left"></div>
             <input
               type="text"
@@ -87,10 +94,14 @@
         const input = document.getElementById("pdfInput");
         const fileList = document.getElementById("fileList");
         fileList.innerHTML = "";
-        selectedFiles.length = 0;
 
         for (const file of input.files) {
-          selectedFiles.push(file);
+          if (!selectedFiles.includes(file)) {
+            selectedFiles.push(file);
+          }
+        }
+
+        selectedFiles.forEach((file) => {
           const listItem = document.createElement("div");
           listItem.className = "file-item";
 
@@ -119,7 +130,7 @@
           listItem.appendChild(document.createTextNode(file.name));
           listItem.appendChild(removeButton);
           fileList.appendChild(listItem);
-        }
+        });
       }
 
       function updateFileListView() {

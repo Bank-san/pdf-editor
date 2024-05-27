@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF編集ツール</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+      }
+      .container {
+        margin-top: 50px;
+      }
+      .card {
+        margin: 20px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .btn-primary {
+        margin-top: 20px;
+      }
+      #downloadLink {
+        margin-top: 20px;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="text-center">
+        <h1 class="mb-4">PDF編集ツール</h1>
+        <div class="card">
+          <div class="card-body">
+            <input
+              type="file"
+              id="originalPdfInput"
+              accept="application/pdf"
+              class="form-control-file mb-3"
+            />
+            <input
+              type="file"
+              id="replacementPdfInput"
+              accept="application/pdf"
+              class="form-control-file mb-3"
+            />
+            <input
+              type="number"
+              id="pageIndex"
+              class="form-control mb-3"
+              placeholder="差し替えるページ番号"
+            />
+            <button onclick="replacePage()" class="btn btn-primary">
+              ページを差し替え
+            </button>
+            <a id="downloadLink" class="btn btn-success" style="display: none"
+              >編集されたPDFをダウンロード</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script>
+      async function replacePage() {
+        const originalPdfInput = document.getElementById("originalPdfInput");
+        const replacementPdfInput = document.getElementById(
+          "replacementPdfInput"
+        );
+        const pageIndex = document.getElementById("pageIndex").value;
+        if (
+          !originalPdfInput.files[0] ||
+          !replacementPdfInput.files[0] ||
+          pageIndex === ""
+        ) {
+          alert("元のPDF、差し替えるPDF、およびページ番号を指定してください。");
+          return;
+        }
+
+        const originalPdfArrayBuffer =
+          await originalPdfInput.files[0].arrayBuffer();
+        const replacementPdfArrayBuffer =
+          await replacementPdfInput.files[0].arrayBuffer();
+
+        const originalPdfDoc = await PDFLib.PDFDocument.load(
+          new Uint8Array(originalPdfArrayBuffer)
+        );
+        const replacementPdfDoc = await PDFLib.PDFDocument.load(
+          new Uint8Array(replacementPdfArrayBuffer)
+        );
+
+        const [replacementPage] = await originalPdfDoc.copyPages(
+          replacementPdfDoc,
+          [0]
+        );
+        originalPdfDoc.removePage(parseInt(pageIndex, 10));
+        originalPdfDoc.insertPage(parseInt(pageIndex, 10), replacementPage);
+
+        const pdfBytes = await originalPdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const link = document.getElementById("downloadLink");
+        link.href = URL.createObjectURL(blob);
+        link.download = "edited.pdf";
+        link.style.display = "block";
+      }
+    </script>
+  </body>
+</html>
